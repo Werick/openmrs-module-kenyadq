@@ -193,24 +193,26 @@ public class DataWarehouseQueries {
                 "when 160536 then 'IPD - Adult'\n" +
                 "else cn.name\n" +
                 "end as PatientSource,\n" +
+                "d.Gender,\n" +
                 "reg.art_start_date as StartARTDate,\n" +
+                "reg.StartedARTAtThisFacility, \n" +
                 "reg.regimen as StartRegimen,\n" +
                 "reg.regimen_line as StartRegimenLine,\n" +
                 "reg.last_art_date as LastARTDate,\n" +
                 "reg.last_regimen as LastRegimen,\n" +
                 "reg.last_regimen_line as LastRegimenLine,\n" +
                 "reg.latest_tca as ExpectedReturn,\n" +
-                "reg.latest_vis_date as LastVisit,\n" +
                 "timestampdiff(month,reg.art_start_date, reg.latest_vis_date) as duration,\n" +
-                "d.Gender,\n" +
-                "disc.visit_date as ExitDate,\n" +
+                "reg.latest_vis_date as LastVisit,\n" +
                 "case\n" +
                 "when disc.discontinuation_reason is not null then dis_rsn.name\n" +
-                "else '' end as ExitReason\n" +
+                "else '' end as ExitReason,\n" +
+                "disc.visit_date as ExitDate \n" +
                 "from kenyaemr_etl.etl_hiv_enrollment hiv \n" +
                 "join kenyaemr_etl.etl_patient_demographics d on d.patient_id=hiv.patient_id\n" +
                 "left outer join  kenyaemr_etl.etl_patient_program_discontinuation disc on disc.patient_id=hiv.patient_id\n" +
                 "left outer join (select e.patient_id,\n" +
+                "if(enr.date_started_art_at_transferring_facility is not null, 'No','Yes') as StartedARTAtThisFacility, \n"+
                 "if(enr.date_started_art_at_transferring_facility is not null,enr.date_started_art_at_transferring_facility,\n" +
                 "e.date_started)as art_start_date, e.date_started, e.gender,e.dob,d.visit_date as dis_date, if(d.visit_date is not null, 1, 0) as TOut,\n" +
                 "e.regimen, e.regimen_line, e.alternative_regimen, max(fup.next_appointment_date) as latest_tca,\n" +
@@ -453,7 +455,7 @@ public class DataWarehouseQueries {
         headerRow.add("StartARTDate");
 //        headerRow.add("PreviousARTStartDate");
 //        headerRow.add("PreviousARTRegimen");
-//        headerRow.add("StartARTAtThisFacility");
+        headerRow.add("StartARTAtThisFacility");
         headerRow.add("StartRegimen");
         headerRow.add("StartRegimenLine");
         headerRow.add("LastARTDate");
