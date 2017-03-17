@@ -85,7 +85,7 @@ public class DataWarehouseQueries {
 
     public String getPatientExtractQuery () {
         String sqlQuery="\n" +
-                "select d.unique_patient_no as PatientID,\n" +
+                "select coalesce(d.unique_patient_no,patient_clinic_number) as PatientID,\n" +
                 "d.patient_id as PatientPK,\n" +
                 "(select value_reference from location_attribute\n" +
                 "where location_id in (select property_value\n" +
@@ -97,9 +97,9 @@ public class DataWarehouseQueries {
                 "where property='kenyaemr.defaultLocation')) as FacilityName,\n" +
                 "d.gender as Gender,\n" +
                 "d.dob as DOB,\n" +
-                "min(hiv.visit_date) as RegistrationDate,\n" +
+                "coalesce(min(hei.visit_date),coalesce(min(hiv.visit_date),min(mch.visit_date))) as RegistrationDate,\n" +
                 "min(hiv.visit_date) as RegistrationAtCCC,\n" +
-                "min(mch.visit_date) as RegistrationATPMTCT,\n" +
+                "coalesce(min(mch.visit_date),min(hei.visit_date)) as RegistrationATPMTCT,\n" +
                 "min(tb.visit_date) as RegistrationAtTBClinic,\n" +
                 "case  max(hiv.entry_point) \n" +
                 "when 160542 then 'OPD' \n" +
@@ -133,10 +133,11 @@ public class DataWarehouseQueries {
                 "from kenyaemr_etl.etl_patient_demographics d\n" +
                 "left outer join kenyaemr_etl.etl_hiv_enrollment hiv on hiv.patient_id=d.patient_id\n" +
                 "left outer join kenyaemr_etl.etl_mch_enrollment mch on mch.patient_id=d.patient_id\n" +
+                "left outer join kenyaemr_etl.etl_hei_enrollment hei on hei.patient_id=d.patient_id\n" +
                 "left outer join kenyaemr_etl.etl_tb_enrollment tb on tb.patient_id=d.patient_id\n" +
                 "left outer join concept_name cn on cn.concept_id=hiv.entry_point  and cn.concept_name_type='FULLY_SPECIFIED'\n" +
                 "and cn.locale='en'\n" +
-                "where unique_patient_no is not null\n"+
+//                "where unique_patient_no is not null\n"+
                 "group by d.patient_id\n" +
                 "order by d.patient_id;";
 
